@@ -20,6 +20,9 @@ fn main() {
         #[structopt(short = "p", long, default_value = "root")]
         password: String,
 
+        #[structopt(short = "sg", long, default_value = "sg")]
+        storage: String,
+
         #[structopt(short = "d", long, default_value = "device_1")]
         device: String,
     }
@@ -40,21 +43,47 @@ fn main() {
     let mut ts = 0;
 
 
-    for _day in 0..365 {
+    for _day in 0..31 {
         for _hour in 0..24 {
             for _minutes in 0..60 {
-                let mut tablet = Tablet::new(format!("root.sg.{}", opt.device).as_str(), vec![
+                let mut tablet = Tablet::new(format!("root.{}.{}", opt.storage, opt.device).as_str(), vec![
                     MeasurementSchema::new(
                         String::from("temp"),
                         TSDataType::Float,
                         TSEncoding::Gorilla,
                         TSCompressionType::SNAPPY,
                         None,
+                    ),
+                    MeasurementSchema::new(
+                        String::from("counter"),
+                        TSDataType::Int64,
+                        TSEncoding::Diff,
+                        TSCompressionType::SNAPPY,
+                        None,
+                    ),
+                    MeasurementSchema::new(
+                        String::from("current"),
+                        TSDataType::Float,
+                        TSEncoding::Gorilla,
+                        TSCompressionType::SNAPPY,
+                        None,
+                    ),
+                    MeasurementSchema::new(
+                        String::from("random_int"),
+                        TSDataType::Int64,
+                        TSEncoding::RLE,
+                        TSCompressionType::SNAPPY,
+                        None,
                     )
                 ]);
                 for _seconds in 0..60 {
                     for _ms in 0..1000 {
-                        tablet.add_row(vec![Value::Float(rng.gen_range(0.0..100.0))], ts).expect("");
+                        tablet.add_row(vec![
+                            Value::Float(rng.gen_range(18000..30000) as f32/1000.0),
+                            Value::Int64(ts),
+                            Value::Float(rng.gen_range(000000..10000000) as f32/100000.0),
+                            Value::Int64(rng.gen_range(000000..10000000)),
+                        ], ts).expect("");
                         ts = ts + 1;
                     }
                 }
