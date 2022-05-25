@@ -1,8 +1,10 @@
+use std::time::Instant;
 use iotdb::client::remote::{Config, RpcSession};
 use iotdb::client::{MeasurementSchema, Session, Tablet, Value};
 use iotdb::protocal::{TSCompressionType, TSDataType, TSEncoding};
 use rand::Rng;
 use structopt::StructOpt;
+
 
 fn main() {
     #[derive(StructOpt)]
@@ -45,6 +47,7 @@ fn main() {
 
     for _day in 0..31 {
         for _hour in 0..24 {
+            let start = Instant::now();
             for _minutes in 0..60 {
                 let mut tablet = Tablet::new(format!("root.{}.{}", opt.storage, opt.device).as_str(), vec![
                     MeasurementSchema::new(
@@ -89,7 +92,10 @@ fn main() {
                 }
                 session.insert_tablet(&tablet).expect("");
             }
-            println!("Day {}/365, {}:00", _day, _hour);
+            let end = Instant::now();
+
+            let duration = end - start;
+            println!("Day {}/365, {}:00, last hour took {} s", _day, _hour, duration.as_micros() as f32/ 1e6);
         }
     }
     session.close().expect("");
